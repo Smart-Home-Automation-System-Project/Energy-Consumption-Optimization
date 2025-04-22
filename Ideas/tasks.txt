@@ -1,0 +1,63 @@
+1. Smart Auto-Shutdown Rules
+TV:
+
+Trigger: Turn off after 30 minutes of no motion detected in living room.
+
+Why: To prevent energy waste when no one is watching.
+
+Microwave:
+
+Trigger: Turn off after 5 minutes of no interaction (no button press or use).
+
+Why: To avoid unnecessary power consumption.
+
+Washing Machine / Dishwasher:
+
+Trigger: Turn off after the cycle completes if no door interaction within a set time (e.g., 5 minutes).
+
+Why: Stops devices running unnecessarily after a cycle ends
+====================================================================================
+2. High Energy Usage Alerts
+TV:
+Trigger: Alert if daily TV consumption exceeds forecasted value by Prophet.
+Why: Detects abnormal energy usage.
+
+Microwave:
+Trigger: Alert if microwave usage exceeds forecasted kWh or run time.
+Why: Identifies inefficient or excessive use.
+
+Refrigerator:
+Trigger: Alert if daily compressor ON-time exceeds Prophet's forecast.
+Why: Detects operational inefficiency.
+
+Washing Machine / Dishwasher:
+Trigger: Alert if daily usage exceeds Prophet forecast or runs longer than predicted cycle duration.
+Why: Identifies overuse or double cycles.
+
+Overall Power Consumption:
+Trigger: Alert if total daily energy usage exceeds forecasted household consumption by Prophet.
+Why: Warns about unexpected spikes in total energy use.
+
+============================================================================================
+Dynamic Load Control
+Monitor Total Power Usage:
+
+Track the total energy consumption in real time from all devices in the home.
+
+Set a Threshold:
+
+If the total household load exceeds 3 kW, automatically turn off non-essential devices.
+
+Priority List (High to Low):
+
+Fridge (Always running)
+
+Lights
+
+Heater
+
+Water Heater
+
+Microwave, Washing Machine, Dishwasher (Lowest priority)
+
+Why: This ensures that your home doesn’t exceed the power capacity and helps prioritize the essential devices while cutting power to less critical devices.
