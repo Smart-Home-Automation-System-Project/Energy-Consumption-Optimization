@@ -1,9 +1,11 @@
 # insert_train_data.py
 import sqlite3
 import random
+import os
 from datetime import datetime, timedelta
 
-conn = sqlite3.connect("database2.db")
+db_path = os.path.join(os.path.dirname(__file__), "database.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 cursor.execute("SELECT * FROM devices")
@@ -28,8 +30,8 @@ def realistic_power(device_type):
         "Microwave": (900, 1200),
         "Refrigerator": (100, 200),
         "Dishwasher": (800, 1300),
-        "Smart Plug": (30, 200),
-        "Washing Machine": (300, 1500),
+        "Smart_Plug": (30, 200),
+        "Washing_Machine": (300, 1500),
         "TV": (70, 150),
         "Light": (10, 100)
     }
