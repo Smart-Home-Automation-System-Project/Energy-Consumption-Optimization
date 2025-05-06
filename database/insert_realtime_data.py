@@ -2,9 +2,11 @@
 import sqlite3
 import random
 from datetime import datetime, timedelta
+import os
 import export_realtime_to_csv
 
-conn = sqlite3.connect("database2.db")
+db_path = os.path.join(os.path.dirname(__file__), "database.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 cursor.execute("SELECT * FROM devices")
@@ -79,5 +81,5 @@ for ts in timestamps:
 
 conn.commit()
 conn.close()
-export_realtime_to_csv.export_realtime_data()
+# export_realtime_to_csv.export_realtime_data()
 print(f"✅ Realtime data inserted for {len(timestamps)} minutes ({start_date} to {end_date})")

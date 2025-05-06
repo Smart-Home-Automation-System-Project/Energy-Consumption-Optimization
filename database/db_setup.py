@@ -1,7 +1,10 @@
 import sqlite3
+import os
+
 
 # Connect to the database
-conn = sqlite3.connect("database2.db")
+db_path = os.path.join(os.path.dirname(__file__), "database.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 # Create 'devices' table
