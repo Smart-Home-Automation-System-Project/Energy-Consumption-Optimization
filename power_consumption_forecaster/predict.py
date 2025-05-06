@@ -16,7 +16,7 @@ ROOT_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
 # --- CONFIG ---
 MODEL_PATH = os.path.join(SCRIPT_DIR, "model.pkl")  # model.pkl is in the same folder as this script
-DB_PATH = os.path.join(ROOT_PATH, "database", "database2.db")  # database folder is in root
+DB_PATH = os.path.join(ROOT_PATH, "database", "database.db")  # database folder is in root
 
 def load_model():
     print("Loading trained Prophet model...")

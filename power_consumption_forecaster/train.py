@@ -14,7 +14,7 @@ ROOT_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
 def load_data():
     print("Loading data...")
-    db_path = os.path.join(ROOT_PATH, "database", "database2.db")
+    db_path = os.path.join(ROOT_PATH, "database", "database.db")
     conn = sqlite3.connect(db_path)
     query = """
     SELECT timestamp, SUM(power_consumption) AS total_power
