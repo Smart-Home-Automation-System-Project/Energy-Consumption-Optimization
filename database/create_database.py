@@ -1,0 +1,9 @@
+import db_setup
+import insert_devices
+import generate_historical_data
+
+db_setup
+insert_devices
+generate_historical_data
+
+
