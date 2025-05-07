@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template
 from routes import predictions, scheduling
+from routes.historical import historical_bp
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,6 +19,7 @@ app.config['DB_PATH'] = DB_PATH
 # Register blueprints
 app.register_blueprint(predictions.bp)
 app.register_blueprint(scheduling.bp)
+app.register_blueprint(historical_bp)
 
 @app.route('/')
 def index():
