@@ -1,0 +1,19 @@
+<header class="py-3 mb-3 border-bottom bg-dark text-white">
+    <div class="container-fluid d-flex flex-wrap justify-content-between">
+        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+            <h3>Energy Consumption Optimization Dashboard</h3>
+        </a>
+        <div class="text-end">
+            <span id="current-date"></span>
+        </div>
+    </div>
+</header>
+
+<script>
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+</script>

@@ -1,0 +1,67 @@
+<div class="chart-container">
+    <canvas id="predictionChart"></canvas>
+</div>
+
+<script>
+    // Fetch prediction data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchPredictions();
+    });
+
+    function fetchPredictions() {
+        fetch('/predictions/today')
+            .then(response => response.json())
+            .then(data => {
+                renderPredictionChart(data);
+            })
+            .catch(error => console.error('Error loading predictions:', error));
+    }
+
+    function renderPredictionChart(data) {
+        const labels = data.map(item => {
+            const date = new Date(item.timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        });
+
+        const values = data.map(item => item.power_consumption);
+
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Predicted Power Consumption (W)',
+                    data: values,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Power (Watts)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>

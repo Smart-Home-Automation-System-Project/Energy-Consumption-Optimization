@@ -1,7 +1,8 @@
 import sqlite3
 from datetime import datetime
-
-conn = sqlite3.connect("database2.db")
+import os
+db_path = os.path.join(os.path.dirname(__file__), "database.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 # Define the tasks to be inserted (washing machine and dishwasher)

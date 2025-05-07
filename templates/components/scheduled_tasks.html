@@ -1,0 +1,144 @@
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div id="scheduled-tasks-container">
+            <h5>Currently Scheduled Tasks</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Target Date</th>
+                            <th>Scheduled Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduled-tasks-body">
+                        <tr>
+                            <td colspan="4" class="text-center">Loading scheduled tasks...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Schedule New Task</div>
+            <div class="card-body">
+                <form id="schedule-form">
+                    <div class="mb-3">
+                        <label for="device" class="form-label">Select Device</label>
+                        <select class="form-select" id="device" name="device" required>
+                            <option value="">-- Select Device --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Target Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Schedule Task</button>
+                </form>
+                <div id="schedule-message" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadScheduledTasks();
+        loadAvailableDevices();
+
+        // Set up form submission
+        document.getElementById('schedule-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            scheduleNewTask();
+        });
+    });
+
+    function loadScheduledTasks() {
+        fetch('/scheduling/')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('scheduled-tasks-body');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No tasks scheduled</td></tr>';
+                    return;
+                }
+
+                data.forEach(task => {
+                    const row = document.createElement('tr');
+
+                    const deviceCell = document.createElement('td');
+                    deviceCell.textContent = task.device_name;
+
+                    const dateCell = document.createElement('td');
+                    dateCell.textContent = task.target_date;
+
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = task.scheduled_time ?
+                        new Date(task.scheduled_time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'Not scheduled yet';
+
+                    const statusCell = document.createElement('td');
+                    statusCell.textContent = task.status;
+
+                    row.appendChild(deviceCell);
+                    row.appendChild(dateCell);
+                    row.appendChild(timeCell);
+                    row.appendChild(statusCell);
+
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error loading scheduled tasks:', error));
+    }
+
+    function loadAvailableDevices() {
+        fetch('/scheduling/devices')
+            .then(response => response.json())
+            .then(data => {
+                const deviceSelect = document.getElementById('device');
+
+                data.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.switch_id;
+                    option.textContent = device.name;
+                    deviceSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading devices:', error));
+    }
+
+    function scheduleNewTask() {
+        const form = document.getElementById('schedule-form');
+        const formData = new FormData(form);
+
+        fetch('/scheduling/schedule', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageDiv = document.getElementById('schedule-message');
+
+            if (data.status === 'success') {
+                messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                form.reset();
+                loadScheduledTasks();
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error scheduling task:', error);
+            document.getElementById('schedule-message').innerHTML =
+                '<div class="alert alert-danger">An error occurred while scheduling the task.</div>';
+        });
+    }
+</script>

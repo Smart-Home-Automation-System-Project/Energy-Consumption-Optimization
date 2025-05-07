@@ -1,0 +1,368 @@
+<!-- HTML Structure -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Total Historical Consumption</h5>
+                <div class="date-range">
+                    <input type="date" id="total-start-date" class="form-control">
+                    <input type="date" id="total-end-date" class="form-control">
+                    <button class="btn btn-primary" onclick="updateTotalHistoricalChart()">Update</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="totalHistoricalChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Device Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="device-search" class="form-control" placeholder="Search devices...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="location-filter" class="form-select">
+                            <option value="">All Locations</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="type-filter" class="form-select">
+                            <option value="">All Device Types</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <!-- Left side: Device cards -->
+                    <div class="col-md-6">
+                        <div id="device-cards" class="row">
+                            <!-- Device cards will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Right side: Selected device graph -->
+                    <div class="col-md-6">
+                        <div id="device-chart-container" class="card d-none">
+                            <div class="card-header">
+                                <h5 id="selected-device-title">Device Consumption</h5>
+                                <div class="date-range mb-3">
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <input type="date" id="device-start-date" class="form-control">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="date" id="device-end-date" class="form-control">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary w-100" onclick="updateDeviceHistoricalChart()">Update</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="deviceHistoricalChart"></canvas>
+                            </div>
+                        </div>
+                        <div id="no-device-selected" class="text-center py-5">
+                            <p class="text-muted">Select a device to view its consumption data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let totalHistoricalChart;
+let deviceHistoricalChart;
+let selectedDevice = null;
+
+async function fetchHistoricalData(endpoint, startDate, endDate) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const response = await fetch(`/historical/${endpoint}?${params}`);
+    return await response.json();
+}
+
+async function updateTotalHistoricalChart() {
+    const startDate = document.getElementById('total-start-date').value;
+    const endDate = document.getElementById('total-end-date').value;
+    const data = await fetchHistoricalData('total', startDate, endDate);
+    
+    if (totalHistoricalChart) {
+        totalHistoricalChart.destroy();
+    }
+
+    totalHistoricalChart = new Chart(
+        document.getElementById('totalHistoricalChart'),
+        {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.date),
+                datasets: [{
+                    label: 'Total Consumption (kWh)',
+                    data: data.map(d => d.total_consumption),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    );
+}
+
+async function updateDeviceHistoricalChart() {
+    if (!selectedDevice) return;
+    
+    const startDate = document.getElementById('device-start-date').value;
+    const endDate = document.getElementById('device-end-date').value;
+    const data = await fetchHistoricalData('by-device', startDate, endDate);
+    
+    if (deviceHistoricalChart) {
+        deviceHistoricalChart.destroy();
+    }
+
+    const deviceData = data.filter(d => d.device_name === selectedDevice);
+
+    deviceHistoricalChart = new Chart(
+        document.getElementById('deviceHistoricalChart'),
+        {
+            type: 'line',
+            data: {
+                labels: deviceData.map(d => d.date),
+                datasets: [{
+                    label: `${selectedDevice} Consumption (kWh)`,
+                    data: deviceData.map(d => d.energy_consumption),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    );
+}
+
+async function loadDeviceCards() {
+    const data = await fetchHistoricalData('by-device', null, null);
+    const locations = [...new Set(data.map(d => d.location))].sort();
+    const types = [...new Set(data.map(d => d.device_type))].sort();
+    
+    // Populate location filter
+    const locationFilter = document.getElementById('location-filter');
+    locationFilter.innerHTML = '<option value="">All Locations</option>';
+    locations.forEach(location => {
+        locationFilter.innerHTML += `<option value="${location}">${location}</option>`;
+    });
+
+    // Populate type filter
+    const typeFilter = document.getElementById('type-filter');
+    typeFilter.innerHTML = '<option value="">All Device Types</option>';
+    types.forEach(type => {
+        typeFilter.innerHTML += `<option value="${type}">${type}</option>`;
+    });
+
+    renderDeviceCards(data);
+}
+
+function renderDeviceCards(data) {
+    const searchTerm = document.getElementById('device-search').value.toLowerCase();
+    const locationFilter = document.getElementById('location-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+    
+    const filteredData = data.filter(d => {
+        const matchesSearch = d.device_name.toLowerCase().includes(searchTerm);
+        const matchesLocation = !locationFilter || d.location === locationFilter;
+        const matchesType = !typeFilter || d.device_type === typeFilter;
+        return matchesSearch && matchesLocation && matchesType;
+    });
+
+    const uniqueDevices = [...new Set(filteredData.map(d => d.device_name))];
+    const deviceCardsContainer = document.getElementById('device-cards');
+    deviceCardsContainer.innerHTML = '';
+
+    if (uniqueDevices.length === 0) {
+        deviceCardsContainer.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No devices found matching the current filters</p>
+            </div>
+        `;
+        return;
+    }
+
+    uniqueDevices.forEach(device => {
+        const deviceInfo = data.find(d => d.device_name === device);
+        const card = document.createElement('div');
+        card.className = 'col-md-6 mb-3';
+        card.innerHTML = `
+            <div class="card h-100 ${selectedDevice === device ? 'border-primary' : ''}" 
+                 data-device="${device}" style="cursor: pointer;">
+                <div class="card-body">
+                    <h5 class="card-title">${device}</h5>
+                    <p class="card-text">
+                        <span class="badge bg-info mb-2">${deviceInfo.location}</span>
+                        <span class="badge bg-secondary mb-2">${deviceInfo.device_type}</span>
+                        <div class="mt-2">
+                            <small class="text-muted">Max Power Rating:</small><br>
+                            <strong>${deviceInfo.max_power_rating}W</strong>
+                        </div>
+                    </p>
+                </div>
+            </div>
+        `;
+        deviceCardsContainer.appendChild(card);
+    });
+    
+    // Add event listeners to cards after they are rendered
+    document.querySelectorAll('#device-cards .card').forEach(cardElement => {
+        cardElement.addEventListener('click', function(event) {
+            const deviceName = this.getAttribute('data-device');
+            selectDevice(deviceName);
+        });
+    });
+    
+    // If a device was previously selected, make sure it's still selected
+    if (selectedDevice) {
+        const deviceExists = uniqueDevices.includes(selectedDevice);
+        if (deviceExists) {
+            selectDevice(selectedDevice);
+        } else {
+            // If the device no longer exists in the filtered list, clear the selection
+            selectedDevice = null;
+            document.getElementById('device-chart-container').classList.add('d-none');
+            document.getElementById('no-device-selected').classList.remove('d-none');
+        }
+    }
+}
+
+function selectDevice(device) {
+    selectedDevice = device;
+    
+    // Update card selection
+    const cards = document.querySelectorAll('#device-cards .card');
+    cards.forEach(card => {
+        if (card.getAttribute('data-device') === device) {
+            card.classList.add('border-primary');
+        } else {
+            card.classList.remove('border-primary');
+        }
+    });
+    
+    // Update chart title
+    document.getElementById('selected-device-title').textContent = `${device} Consumption`;
+    
+    // Show chart container, hide the no-selection message
+    document.getElementById('device-chart-container').classList.remove('d-none');
+    document.getElementById('no-device-selected').classList.add('d-none');
+    
+    // Update the chart
+    updateDeviceHistoricalChart();
+}
+
+// Initialize charts and device cards on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    // Set default dates (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    const formatDate = (date) => {
+        return date.toISOString().split('T')[0];
+    };
+    
+    document.getElementById('total-start-date').value = formatDate(thirtyDaysAgo);
+    document.getElementById('total-end-date').value = formatDate(today);
+    document.getElementById('device-start-date').value = formatDate(thirtyDaysAgo);
+    document.getElementById('device-end-date').value = formatDate(today);
+    
+    await updateTotalHistoricalChart();
+    await loadDeviceCards();
+
+    // Add event listeners for filters
+    document.getElementById('device-search').addEventListener('input', async () => {
+        const data = await fetchHistoricalData('by-device', null, null);
+        renderDeviceCards(data);
+    });
+    
+    document.getElementById('location-filter').addEventListener('change', async () => {
+        const data = await fetchHistoricalData('by-device', null, null);
+        renderDeviceCards(data);
+    });
+    
+    document.getElementById('type-filter').addEventListener('change', async () => {
+        const data = await fetchHistoricalData('by-device', null, null);
+        renderDeviceCards(data);
+    });
+});
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.5em 0.8em;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.date-range {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+#device-chart-container {
+    height: 100%;
+    min-height: 400px;
+}
+
+#no-device-selected {
+    height: 100%;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+</style>
