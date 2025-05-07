@@ -1,0 +1,4 @@
+Model Performance Metrics:
+Mean Absolute Error: 680.98 watts
+Root Mean Square Error: 814.11 watts
+R² Score: 0.5209
