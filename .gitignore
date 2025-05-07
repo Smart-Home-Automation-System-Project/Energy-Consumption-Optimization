@@ -3,6 +3,7 @@ predict_man_explicit.py
 
 # Directories
 /predictor/
+.env
 
 
 # Database files
