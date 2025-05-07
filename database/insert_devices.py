@@ -1,7 +1,6 @@
 # insert_devices.py
 import sqlite3
 import os
-import export_devices_to_csv
 
 db_path = os.path.join(os.path.dirname(__file__), "database.db")
 conn = sqlite3.connect(db_path)
