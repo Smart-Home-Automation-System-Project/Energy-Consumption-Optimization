@@ -16,10 +16,23 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5>Energy Consumption Forecast</h5>
+                        <h5>Today's Energy Consumption Forecast</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/prediction_chart.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5>7-Day Energy Consumption Forecast</h5>
+                    </div>
+                    <div class="card-body">
+                        {% include 'components/seven_day_forecast.html' %}
                     </div>
                 </div>
             </div>
