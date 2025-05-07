@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 ROOT_PATH = os.getenv("ROOT_PATH")
-DB_PATH = os.path.join(ROOT_PATH, "database", "database2.db")
+DB_PATH = os.path.join(ROOT_PATH, "database", "database.db")
 
 
 class DeviceInfo:

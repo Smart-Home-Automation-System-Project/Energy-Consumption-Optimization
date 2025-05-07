@@ -13,7 +13,7 @@ ROOT_PATH = os.getenv('ROOT_PATH')
 if ROOT_PATH is None:
     raise ValueError("ROOT_PATH not found in .env file")
 
-DB_PATH = os.path.join(ROOT_PATH, "database", "database2.db")
+DB_PATH = os.path.join(ROOT_PATH, "database", "database.db")
 
 # Check if time is already taken for that day
 def is_time_occupied(conn, target_date, timestamp_str):
