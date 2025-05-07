@@ -23,8 +23,11 @@ def load_model():
     return joblib.load(MODEL_PATH)
 
 def make_future_df(model):
-    print("Creating future dataframe (5min intervals for 7 days)...")
-    return model.make_future_dataframe(periods=7 * 288, freq='5min')
+    print("Creating future dataframe (30min intervals for 7 days)...")
+    future_df = model.make_future_dataframe(periods=7 * 48, freq='30min')  # 48 half-hours in a day
+    # Add day of week as additional regressor
+    future_df['day_of_week'] = future_df['ds'].dt.dayofweek
+    return future_df
 
 def forecast(model, future_df):
     print("Making predictions...")
@@ -37,10 +40,10 @@ def forecast(model, future_df):
 
     # Apply post-processing adjustment factors
     np.random.seed(42)
-    adjustment_offset = np.random.randint(-400, 700, len(result))
-    compensation_noise = np.random.normal(loc=0, scale=200, size=len(result)).astype(int)
-    result['power_consumption'] += adjustment_offset + compensation_noise
-    result['power_consumption'] = result['power_consumption'].clip(lower=0)
+    # adjustment_offset = np.random.randint(-400, 700, len(result))
+    # compensation_noise = np.random.normal(loc=0, scale=200, size=len(result)).astype(int)
+    # result['power_consumption'] += adjustment_offset + compensation_noise
+    # result['power_consumption'] = result['power_consumption'].clip(lower=0)
 
     return result[['timestamp', 'power_consumption']]
 

@@ -30,13 +30,16 @@ def prepare_data(df):
     print("Preparing data...")
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.rename(columns={'timestamp': 'ds', 'total_power': 'y'})
-    df = df.dropna()
+    # Add day of week as additional regressor
+    df['day_of_week'] = df['ds'].dt.dayofweek
     print(df.head())
     return df
 
 def train_prophet_model(df):
     print("Training Prophet model...")
     model = Prophet()
+    # Add day of week as additional regressor
+    model.add_regressor('day_of_week')
     model.fit(df)
     return model
 
