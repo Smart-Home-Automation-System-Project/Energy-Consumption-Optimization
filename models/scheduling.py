@@ -9,6 +9,7 @@ def get_scheduled_tasks():
                st.target_date, st.scheduled_time, st.status
         FROM scheduled_tasks st
         JOIN devices d ON st.switch_id = d.switch_id
+        WHERE date(st.target_date) >= date('now')
         ORDER BY st.target_date, st.scheduled_time
     ''').fetchall()
 
@@ -20,7 +21,7 @@ def get_available_devices():
     devices = db.execute('''
         SELECT switch_id, name 
         FROM devices 
-        WHERE device_type IN ('Washing Machine', 'Dishwasher')
+        WHERE device_type IN ('Washing_Machine', 'Dishwasher')
     ''').fetchall()
 
     return devices

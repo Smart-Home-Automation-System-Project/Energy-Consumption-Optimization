@@ -1,53 +1,205 @@
-<div class="chart-container">
+<div class="chart-container" style="height: 500px;">
     <canvas id="sevenDayForecastChart"></canvas>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/predictions/seven-days')
-        .then(response => response.json())
-        .then(data => {
-            const dates = data.map(item => item.date);
-            const consumption = data.map(item => item.total_consumption);
+    // Fetch both consumption and scheduled tasks data
+    Promise.all([
+        fetch('/predictions/seven-days').then(response => response.json()),
+        fetch('/scheduling/').then(response => response.json())
+    ])
+    .then(([consumptionData, tasksData]) => {
+        console.log('Consumption Data:', consumptionData);
+        console.log('Tasks Data:', tasksData);
 
-            const ctx = document.getElementById('sevenDayForecastChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Total Energy Consumption (kWh)',
+        // Process consumption data
+        const timestamps = consumptionData.map(item => item.timestamp);
+        const consumption = consumptionData.map(item => item.power_consumption);
+        
+        // Extract just the date part for grouping
+        const dateParts = timestamps.map(timestamp => timestamp.split(' ')[0]);
+        
+        // Get unique dates for x-axis labels
+        const uniqueDates = [...new Set(dateParts)];
+        
+        // Create date breaks - positions where date changes
+        const dateBreaks = [];
+        let currentDate = '';
+        dateParts.forEach((date, index) => {
+            if (date !== currentDate) {
+                dateBreaks.push(index);
+                currentDate = date;
+            }
+        });
+
+        // Process scheduled tasks data
+        const scheduledTasks = tasksData.map(task => {
+            console.log('Task:', task);
+            const taskDateTime = new Date(`${task.scheduled_time}`);
+            console.log('Comparing:', {timestamp: timestamps[0], taskDateTime});
+            let closestIndex = 0;
+            let minDiff = Infinity;
+
+            timestamps.forEach((timestamp, index) => {
+                // Ensure both are Date objects
+                const tsDate = new Date(timestamp);
+                const diff = Math.abs(tsDate - taskDateTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = index;
+                }
+            });
+
+            return {
+                x: timestamps[closestIndex],
+                y: consumption[closestIndex],
+                device: task.device_name,
+                time: task.scheduled_time
+            };
+        });
+
+        const ctx = document.getElementById('sevenDayForecastChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Power Consumption (kWh)',
                         data: consumption,
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        tension: 0.4
-                    }]
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        
+                    },
+                    {
+                        label: 'Scheduled Tasks',
+                        data: scheduledTasks,
+                        type: 'scatter',
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        pointStyle: 'star',
+                        showLine: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: true
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Energy Consumption (kWh)'
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Power Consumption (kWh)',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
                             }
                         },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: true
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 12
                             },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
+                            callback: function(value, index) {
+                                if (dateBreaks.includes(index)) {
+                                    const date = new Date(this.getLabelForValue(value));
+                                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                                    return `${dayName}, ${date.toLocaleDateString()}`;
+                                }
+                                return '';
+                            }
+                        },
+                        grid: {
+                            color: function(context) {
+                                if (dateBreaks.includes(context.index)) {
+                                    return 'rgba(0, 0, 0, 0.15)';
+                                }
+                                return 'rgba(0, 0, 0, 0.05)';
                             }
                         }
                     }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const date = new Date(context[0].label);
+                                return date.toLocaleString();
+                            },
+                            label: function(context) {
+                                if (context.dataset.label === 'Scheduled Tasks') {
+                                    const task = context.raw;
+                                    return [
+                                        `Device: ${task.device}`,
+                                        `Time: ${task.time}`,
+                                        `Consumption: ${task.y.toFixed(2)} kWh`
+                                    ];
+                                }
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' kWh';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
                 }
-            });
+            }
         });
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
+    });
 });
 </script>

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, redirect, url_for, flash, render_template
 from models.scheduling import get_scheduled_tasks, get_available_devices, schedule_task
 from datetime import datetime, timedelta
-
+from power_consumption_forecaster.schedule import schedule_all_tasks as run_scheduling_algorithm
 bp = Blueprint('scheduling', __name__, url_prefix='/scheduling')
 
 
@@ -18,8 +18,15 @@ def get_devices():
     result = [dict(d) for d in devices]
     return jsonify(result)
 
+@bp.route('/schedule/all', methods=['POST'])
+def schedule_all_tasks_route():
+    try:
+        run_scheduling_algorithm()
+        return jsonify({'status': 'success', 'message': 'All tasks scheduled successfully!'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@bp.route('/schedule', methods=['POST'])
+@bp.route('/schedule/device', methods=['POST'])
 def add_task():
     data = request.form
     switch_id = data.get('device')
@@ -30,7 +37,10 @@ def add_task():
 
     try:
         success = schedule_task(switch_id, target_date)
+        
+    
         if success:
+            run_scheduling_algorithm()
             return jsonify({'status': 'success', 'message': 'Task scheduled successfully!'})
         else:
             return jsonify({'status': 'error', 'message': 'Failed to schedule task'}), 500

@@ -13,7 +13,9 @@ class HistoricalData:
             end_date = datetime.now().strftime('%Y-%m-%d')
             
         query = """
-            SELECT date(timestamp) as date, SUM(power_consumption) as total_consumption
+            SELECT 
+                date(timestamp) as date, 
+                SUM(power_consumption) / 1000.0 as total_consumption
             FROM historical_energy_readings
             WHERE date(timestamp) BETWEEN ? AND ?
             GROUP BY date(timestamp)
@@ -36,8 +38,11 @@ class HistoricalData:
             SELECT 
                 date(her.timestamp) as date,
                 her.switch_id,
-                d.name as device_name,d.location,d.device_type,d.max_power_rating,
-                SUM(her.power_consumption) as energy_consumption
+                d.name as device_name,
+                d.location,
+                d.device_type,
+                d.max_power_rating,
+                SUM(her.power_consumption) / 1000.0 as energy_consumption
             FROM historical_energy_readings her
             JOIN devices d ON her.switch_id = d.switch_id
             WHERE date(her.timestamp) BETWEEN ? AND ?

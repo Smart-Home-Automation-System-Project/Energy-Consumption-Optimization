@@ -5,43 +5,91 @@
 <script>
     // Fetch prediction data when page loads
     document.addEventListener('DOMContentLoaded', function() {
-        fetchPredictions();
+        fetchPredictionAndTasks();
     });
 
-    function fetchPredictions() {
-        fetch('/predictions/today')
-            .then(response => response.json())
-            .then(data => {
-                renderPredictionChart(data);
-            })
-            .catch(error => console.error('Error loading predictions:', error));
+    function fetchPredictionAndTasks() {
+        Promise.all([
+            fetch('/predictions/today').then(response => response.json()),
+            fetch('/scheduling/').then(response => response.json())
+        ])
+        .then(([predictionData, tasksData]) => {
+            renderPredictionChart(predictionData, tasksData);
+        })
+        .catch(error => console.error('Error loading predictions or tasks:', error));
     }
 
-    function renderPredictionChart(data) {
+    function renderPredictionChart(data, tasksData) {
         const labels = data.map(item => {
             const date = new Date(item.timestamp);
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         });
 
+        const timestamps = data.map(item => item.timestamp);
         const values = data.map(item => item.power_consumption);
 
+        // Filter tasks for today only
+        const today = new Date().toISOString().split('T')[0];
+        const todayTasks = tasksData.filter(task => task.scheduled_time.startsWith(today));
+
+        // Map scheduled tasks to closest prediction data point
+        const scheduledTasks = todayTasks.map(task => {
+            const taskDateTime = new Date(task.scheduled_time);
+            let closestIndex = 0;
+            let minDiff = Infinity;
+            timestamps.forEach((timestamp, index) => {
+                const tsDate = new Date(timestamp);
+                const diff = Math.abs(tsDate - taskDateTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = index;
+                }
+            });
+            return {
+                x: labels[closestIndex],
+                y: values[closestIndex],
+                device: task.device_name,
+                time: task.scheduled_time
+            };
+        });
+
         const ctx = document.getElementById('predictionChart').getContext('2d');
-        const chart = new Chart(ctx, {
+        new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Predicted Power Consumption (W)',
-                    data: values,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    tension: 0.4
-                }]
+                datasets: [
+                    {
+                        label: 'Predicted Power Consumption (W)',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    },
+                    {
+                        label: 'Scheduled Tasks',
+                        data: scheduledTasks,
+                        type: 'scatter',
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointRadius: 10,
+                        pointHoverRadius: 12,
+                        pointStyle: 'star',
+                        showLine: false
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: true
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -58,6 +106,23 @@
                         ticks: {
                             maxRotation: 45,
                             minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label === 'Scheduled Tasks') {
+                                    const task = context.raw;
+                                    return [
+                                        `Device: ${task.device}`,
+                                        `Time: ${task.time}`,
+                                        `Consumption: ${task.y.toFixed(2)} W`
+                                    ];
+                                }
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' W';
+                            }
                         }
                     }
                 }
