@@ -39,6 +39,7 @@
                     <div class="mb-3">
                         <label for="date" class="form-label">Target Date</label>
                         <input type="date" class="form-control" id="date" name="date" required>
+                        <small class="text-muted">Select a date within the next 7 days</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Schedule Task</button>
                 </form>
@@ -52,6 +53,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadScheduledTasks();
         loadAvailableDevices();
+        setupDateInput();
 
         // Set up form submission
         document.getElementById('schedule-form').addEventListener('submit', function(e) {
@@ -64,6 +66,37 @@
             scheduleAllTasks();
         });
     });
+
+    function setupDateInput() {
+        const dateInput = document.getElementById('date');
+        
+        // Set min date to today
+        const today = new Date();
+        const minDate = today.toISOString().split('T')[0];
+        
+        // Set max date to 7 days from today
+        const maxDate = new Date(today);
+        maxDate.setDate(today.getDate() + 7);
+        const maxDateStr = maxDate.toISOString().split('T')[0];
+        
+        // Set min and max attributes
+        dateInput.setAttribute('min', minDate);
+        dateInput.setAttribute('max', maxDateStr);
+        
+        // Add validation on change
+        dateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            const maxDate = new Date(today);
+            maxDate.setDate(today.getDate() + 7);
+            
+            if (selectedDate < today || selectedDate > maxDate) {
+                this.setCustomValidity('Please select a date within the next 7 days');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
 
     function loadScheduledTasks() {
         fetch('/scheduling/')

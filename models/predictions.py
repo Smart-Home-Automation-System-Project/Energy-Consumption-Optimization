@@ -39,13 +39,11 @@ def get_seven_day_predictions():
     db = get_db()
     predictions = db.execute('''
         SELECT 
-            DATE(timestamp) as date,
-            SUM(power_consumption) as total_consumption
+            timestamp,
+            power_consumption
         FROM predictions 
         WHERE timestamp >= DATE('now')
         AND timestamp <= DATE('now', '+7 days')
-        GROUP BY DATE(timestamp)
-        ORDER BY date
+        ORDER BY timestamp
     ''').fetchall()
-    print('')
     return predictions
