@@ -71,7 +71,7 @@ def schedule_all_tasks():
                     WHERE task_id = ?
                 """, (ts, task['task_id']))
                 assigned += 1
-                print(f"✅ Task {task['task_id']} scheduled at {ts}")
+                print(f" Task {task['task_id']} scheduled at {ts}")
                 break
 
     conn.commit()
