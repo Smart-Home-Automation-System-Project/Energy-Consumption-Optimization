@@ -16,11 +16,11 @@ devices = [
     ("dw_01", "Dishwasher", "Kitchen", "Dishwasher", 1500),
     ("sp_01", "SmartPlug1", "Living_Room", "Smart_Plug", 400),
     ("sp_02", "SmartPlug2", "Living_Room", "Smart_Plug", 400),
-    ("sp_03", "SmartPlug1", "Bedroom_2", "Smart_Plug", 400),
-    ("sp_04", "SmartPlug1", "Bedroom_2", "Smart_Plug", 400),
-    ("sp_05", "SmartPlug1", "Bedroom_1", "Smart_Plug", 400),
-    ("sp_06", "SmartPlug1", "Bedroom_1", "Smart_Plug", 400),
-    ("sp_07", "SmartPlug1", "Kitchen", "Smart_Plug", 400),
+    ("sp_03", "SmartPlug3", "Bedroom_2", "Smart_Plug", 400),
+    ("sp_04", "SmartPlug4", "Bedroom_2", "Smart_Plug", 400),
+    ("sp_05", "SmartPlug5", "Bedroom_1", "Smart_Plug", 400),
+    ("sp_06", "SmartPlug6", "Bedroom_1", "Smart_Plug", 400),
+    ("sp_07", "SmartPlug7", "Kitchen", "Smart_Plug", 400),
     ("wm_01", "WashingMachine", "Living_Room", "Washing_Machine", 1500),
     ("tv_01", "TV", "Living_Room", "TV", 150),
     ("B_01", "Bulb1", "Bedroom_1", "Light", 100),
@@ -33,6 +33,7 @@ devices = [
     ("B_08", "Bulb8", "Garden", "Light", 100),
     ("B_09", "Bulb9", "Garden", "Light", 100),
     ("B_10", "Bulb10", "Garden", "Light", 100),
+    ("SVC_01", "SmartVacuumCleaner", "Living_Room", "Smart_Vacuum_Cleaner", 350),
 ]
 
 cursor.executemany("""
