@@ -68,19 +68,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         label: 'Power Consumption (kWh)',
                         data: consumption,
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        tension: 0.4
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        
                     },
                     {
                         label: 'Scheduled Tasks',
                         data: scheduledTasks,
                         type: 'scatter',
-                        backgroundColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
                         borderColor: 'rgba(255, 99, 132, 1)',
-                        pointRadius: 10,
-                        pointHoverRadius: 12,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
                         pointStyle: 'star',
                         showLine: false
                     }
@@ -89,37 +93,59 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: true
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Power Consumption (kWh)'
+                            text: 'Power Consumption (kWh)',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: true
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: 'Date'
+                            text: 'Date',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
                         },
                         ticks: {
                             maxRotation: 45,
                             minRotation: 45,
+                            font: {
+                                size: 12
+                            },
                             callback: function(value, index) {
-                                // Only show date at the beginning of each date group
                                 if (dateBreaks.includes(index)) {
                                     const date = new Date(this.getLabelForValue(value));
                                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                                     return `${dayName}, ${date.toLocaleDateString()}`;
                                 }
-                                return ''; // Hide other timestamps
+                                return '';
                             }
                         },
                         grid: {
                             color: function(context) {
-                                // Highlight grid lines at date breaks
                                 if (dateBreaks.includes(context.index)) {
-                                    return 'rgba(0, 0, 0, 0.1)';
+                                    return 'rgba(0, 0, 0, 0.15)';
                                 }
                                 return 'rgba(0, 0, 0, 0.05)';
                             }
@@ -128,6 +154,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 plugins: {
                     tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         callbacks: {
                             title: function(context) {
                                 const date = new Date(context[0].label);
@@ -142,13 +177,22 @@ document.addEventListener('DOMContentLoaded', function() {
                                         `Consumption: ${task.y.toFixed(2)} kWh`
                                     ];
                                 }
-                                return context.dataset.label + ': ' + context.parsed.y + ' kWh';
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' kWh';
                             }
                         }
                     },
                     legend: {
                         display: true,
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     }
                 }
             }
