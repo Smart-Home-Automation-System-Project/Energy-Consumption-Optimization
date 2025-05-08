@@ -1,0 +1,97 @@
+import sqlite3
+import random
+from datetime import datetime
+import time
+import os
+
+# Get the directory where the script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(script_dir, 'database.db')
+
+# Connect to the SQLite database
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+print(f"Connected to database at: {db_path}")
+# Retrieve all devices from the devices table
+cursor.execute("SELECT switch_id, device_type, max_power_rating FROM devices")
+devices = cursor.fetchall()
+
+# Define anomaly probability (5% chance)
+p_anomaly = 0.05
+
+# Define parameters for each device type
+device_params = {
+    'Light': {'p_on': 0.7, 'normal_range': [0.8, 1.0], 'anomaly_low': 0.5, 'anomaly_high': 1.1},
+    'AC': {'p_on': 0.5, 'normal_range': [0.5, 1.0], 'anomaly_low': 0.2, 'anomaly_high': 1.1},
+    'Microwave': {'p_on': 0.2, 'normal_range': [0.7, 1.0], 'anomaly_low': 0.3, 'anomaly_high': 1.1},
+    'Dishwasher': {'p_on': 0.2, 'normal_range': [0.7, 1.0], 'anomaly_low': 0.3, 'anomaly_high': 1.1},
+    'Washing_Machine': {'p_on': 0.2, 'normal_range': [0.7, 1.0], 'anomaly_low': 0.3, 'anomaly_high': 1.1},
+    'Smart_Plug': {'p_on': 0.5, 'normal_range': [0.0, 1.0], 'anomaly_low': 0.0, 'anomaly_high': 1.1},
+    'TV': {'p_on': 0.4, 'normal_range': [0.5, 1.0], 'anomaly_low': 0.2, 'anomaly_high': 1.1},
+    'Refrigerator': {'p_low': 0.8, 'low_range': [10, 20], 'high_range': [0.8, 1.0], 'anomaly_low': 5, 'anomaly_high': 1.1},
+}
+
+# Function to generate power consumption based on device type and max power
+def generate_power(device_type, max_power):
+    if device_type == 'Refrigerator':
+        # Refrigerators are always on, with low or high power modes
+        if random.random() < p_anomaly:
+            # Anomalous reading
+            if random.random() < 0.5:
+                # Too low (e.g., fault causing near-zero usage)
+                return round(random.uniform(0, device_params[device_type]['anomaly_low']), 2)
+            else:
+                # Too high (e.g., overworking compressor)
+                return round(random.uniform(device_params[device_type]['anomaly_high'] * max_power, 1.5 * max_power), 2)
+        else:
+            # Normal operation
+            if random.random() < device_params[device_type]['p_low']:
+                # Low power mode (controls/fan only)
+                return round(random.uniform(device_params[device_type]['low_range'][0], device_params[device_type]['low_range'][1]), 2)
+            else:
+                # High power mode (compressor running)
+                return round(random.uniform(device_params[device_type]['high_range'][0] * max_power, device_params[device_type]['high_range'][1] * max_power), 2)
+    else:
+        # Other device types can be on or off
+        params = device_params[device_type]
+        if random.random() < params['p_on']:
+            # Device is on
+            if random.random() < p_anomaly:
+                # Anomalous reading when on
+                if random.random() < 0.5:
+                    # Too low (e.g., malfunction reducing power)
+                    return round(random.uniform(0, params['anomaly_low'] * max_power), 2)
+                else:
+                    # Too high (e.g., short circuit or overload)
+                    return round(random.uniform(params['anomaly_high'] * max_power, 1.5 * max_power), 2)
+            else:
+                # Normal reading when on
+                return round(random.uniform(params['normal_range'][0] * max_power, params['normal_range'][1] * max_power), 2)
+        else:
+            # Device is off
+            if random.random() < p_anomaly:
+                # Anomalous reading when off (e.g., leakage current)
+                return round(random.uniform(0.1 * max_power, 0.3 * max_power), 2)
+            else:
+                # Normal off state
+                return 0.0
+
+# Main loop to continuously insert real-time data
+while True:
+    # Get current timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Generate and insert data for each device
+    for switch_id, device_type, max_power in devices:
+        power_consumption = generate_power(device_type, max_power)
+        print(f"Generated power consumption for {device_type} ({switch_id}): {power_consumption} W")
+        cursor.execute("INSERT INTO real_time_energy_readings (switch_id, timestamp, power_consumption) VALUES (?, ?, ?)",
+                       (switch_id, timestamp, power_consumption))
+    
+    # Commit the transaction
+    conn.commit()
+    
+    # Wait for 1 minute before the next insertion
+    time.sleep(60)
+
+# Note: In a production environment, you'd want to add error handling and a way to gracefully stop the script.

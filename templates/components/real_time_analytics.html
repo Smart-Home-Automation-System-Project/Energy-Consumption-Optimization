@@ -1,0 +1,180 @@
+<div class="row">
+    <!-- Power Usage Stats Cards -->
+    <div class="col-md-3">
+        <div class="card mb-3 border-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-primary">Average Power</h5>
+                <h3 class="mb-0" id="avg-power">-- W</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3 border-success">
+            <div class="card-body text-center">
+                <h5 class="card-title text-success">Daily Usage</h5>
+                <h3 class="mb-0" id="daily-kwh">-- kWh</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3 border-info">
+            <div class="card-body text-center">
+                <h5 class="card-title text-info">Min Power</h5>
+                <h3 class="mb-0" id="min-power">-- W</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3 border-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title text-warning">Max Power</h5>
+                <h3 class="mb-0" id="max-power">-- W</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Hourly Usage Chart -->
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Today's Hourly Power Usage</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="hourlyUsageChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Device Contribution Pie Chart -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Device Power Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="deviceContributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts
+let hourlyChart = null;
+let deviceChart = null;
+
+// Function to update the power usage stats
+function updatePowerStats() {
+    fetch('/analytics/power-usage')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const stats = data.data;
+                document.getElementById('avg-power').textContent = `${stats.average_power} W`;
+                document.getElementById('daily-kwh').textContent = `${stats.daily_kwh} kWh`;
+                document.getElementById('min-power').textContent = `${stats.min_power} W`;
+                document.getElementById('max-power').textContent = `${stats.max_power} W`;
+                
+                // Update device contribution pie chart
+                if (deviceChart) {
+                    deviceChart.destroy();
+                }
+                
+                const deviceCtx = document.getElementById('deviceContributionChart').getContext('2d');
+                deviceChart = new Chart(deviceCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: stats.device_contributions.map(d => d.device_type),
+                        datasets: [{
+                            data: stats.device_contributions.map(d => d.percentage),
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                                '#9966FF', '#FF9F40', '#7CBA3B', '#EC932F'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const device = stats.device_contributions[context.dataIndex];
+                                        return `${device.device_type}: ${device.percentage}% (${device.total_power}W)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
+
+// Function to update the hourly usage chart
+function updateHourlyUsage() {
+    fetch('/analytics/hourly-usage')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (hourlyChart) {
+                    hourlyChart.destroy();
+                }
+                
+                const hourlyCtx = document.getElementById('hourlyUsageChart').getContext('2d');
+                hourlyChart = new Chart(hourlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.data.hours.map(h => `${h}:00`),
+                        datasets: [{
+                            label: 'Average Power (W)',
+                            data: data.data.values,
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Power (Watts)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Hour of Day'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
+
+// Initial update
+updatePowerStats();
+updateHourlyUsage();
+
+// Update every minute
+setInterval(() => {
+    updatePowerStats();
+    updateHourlyUsage();
+}, 60000);
+</script> 
