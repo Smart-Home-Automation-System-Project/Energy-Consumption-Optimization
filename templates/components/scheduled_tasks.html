@@ -1,7 +1,10 @@
 <div class="row mb-4">
     <div class="col-md-6">
         <div id="scheduled-tasks-container">
-            <h5>Currently Scheduled Tasks</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Currently Scheduled Tasks</h5>
+                <button id="schedule-all-btn" class="btn btn-primary">Schedule All</button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -54,6 +57,11 @@
         document.getElementById('schedule-form').addEventListener('submit', function(e) {
             e.preventDefault();
             scheduleNewTask();
+        });
+
+        // Set up Schedule All button
+        document.getElementById('schedule-all-btn').addEventListener('click', function() {
+            scheduleAllTasks();
         });
     });
 
@@ -119,7 +127,7 @@
         const form = document.getElementById('schedule-form');
         const formData = new FormData(form);
 
-        fetch('/scheduling/schedule', {
+        fetch('/scheduling/schedule/device', {
             method: 'POST',
             body: formData
         })
@@ -139,6 +147,27 @@
             console.error('Error scheduling task:', error);
             document.getElementById('schedule-message').innerHTML =
                 '<div class="alert alert-danger">An error occurred while scheduling the task.</div>';
+        });
+    }
+
+    function scheduleAllTasks() {
+        fetch('/scheduling/schedule/all', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageDiv = document.getElementById('schedule-message');
+            if (data.status === 'success') {
+                messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadScheduledTasks(); // Refresh the tasks list
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error scheduling all tasks:', error);
+            document.getElementById('schedule-message').innerHTML =
+                '<div class="alert alert-danger">An error occurred while scheduling all tasks.</div>';
         });
     }
 </script>
