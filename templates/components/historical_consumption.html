@@ -193,6 +193,10 @@ async function loadDeviceCards() {
     renderDeviceCards(data);
 }
 
+function formatDeviceName(deviceName) {
+    return deviceName.replace(/Bulb/i, 'Light');
+}
+
 function renderDeviceCards(data) {
     const searchTerm = document.getElementById('device-search').value.toLowerCase();
     const locationFilter = document.getElementById('location-filter').value;
@@ -221,6 +225,7 @@ function renderDeviceCards(data) {
     uniqueDevices.forEach(device => {
         const deviceInfo = data.find(d => d.device_name === device);
         const isSelected = selectedDevice === device;
+        const formattedDeviceName = formatDeviceName(device);
         const card = document.createElement('div');
         card.className = 'col-md-6 mb-3';
         card.innerHTML = `
@@ -230,7 +235,7 @@ function renderDeviceCards(data) {
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h5 class="card-title">${device}</h5>
+                                <h5 class="card-title">${formattedDeviceName}</h5>
                                 <div class="mb-2">
                                     <span class="badge bg-info">${deviceInfo.location}</span>
                                     <span class="badge bg-secondary">${deviceInfo.device_type}</span>
@@ -270,8 +275,9 @@ function selectDevice(device) {
         }
     });
     
-    // Update chart title
-    document.getElementById('selected-device-title').textContent = `${device} Consumption`;
+    // Update chart title with formatted device name
+    const formattedDeviceName = formatDeviceName(device);
+    document.getElementById('selected-device-title').textContent = `${formattedDeviceName} Consumption`;
     
     // Show chart container, hide the no-selection message
     document.getElementById('device-chart-container').classList.remove('d-none');

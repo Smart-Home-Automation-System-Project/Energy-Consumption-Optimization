@@ -1,38 +1,46 @@
 <div class="row">
     <!-- Power Usage Stats Cards -->
     <div class="col-md-3">
-        <div class="card mb-3 border-primary">
-            <div class="card-body stats-card">
-                <i class="fas fa-bolt text-primary"></i>
-                <h5 class="card-title text-primary">Average Power</h5>
-                <h3 class="mb-0" id="avg-power">-- W</h3>
+        <div class="stats-card-wrapper">
+            <div class="card mb-3">
+                <div class="card-body stats-card">
+                    <i class="fas fa-bolt text-primary"></i>
+                    <h5 class="card-title text-primary">Average Power</h5>
+                    <h3 class="mb-0" id="avg-power">-- W</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card mb-3 border-success">
-            <div class="card-body stats-card">
-                <i class="fas fa-chart-line text-success"></i>
-                <h5 class="card-title text-success">Daily Usage</h5>
-                <h3 class="mb-0" id="daily-kwh">-- kWh</h3>
+        <div class="stats-card-wrapper">
+            <div class="card mb-3">
+                <div class="card-body stats-card">
+                    <i class="fas fa-chart-line text-success"></i>
+                    <h5 class="card-title text-success">Daily Usage</h5>
+                    <h3 class="mb-0" id="daily-kwh">-- kWh</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card mb-3 border-info">
-            <div class="card-body stats-card">
-                <i class="fas fa-arrow-down text-info"></i>
-                <h5 class="card-title text-info">Min Power</h5>
-                <h3 class="mb-0" id="min-power">-- W</h3>
+        <div class="stats-card-wrapper">
+            <div class="card mb-3">
+                <div class="card-body stats-card">
+                    <i class="fas fa-arrow-down text-info"></i>
+                    <h5 class="card-title text-info">Min Power</h5>
+                    <h3 class="mb-0" id="min-power">-- W</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card mb-3 border-warning">
-            <div class="card-body stats-card">
-                <i class="fas fa-arrow-up text-warning"></i>
-                <h5 class="card-title text-warning">Max Power</h5>
-                <h3 class="mb-0" id="max-power">-- W</h3>
+        <div class="stats-card-wrapper">
+            <div class="card mb-3">
+                <div class="card-body stats-card">
+                    <i class="fas fa-arrow-up text-warning"></i>
+                    <h5 class="card-title text-warning">Max Power</h5>
+                    <h3 class="mb-0" id="max-power">-- W</h3>
+                </div>
             </div>
         </div>
     </div>
@@ -63,6 +71,87 @@
         </div>
     </div>
 </div>
+
+<style>
+.stats-card-wrapper {
+    transition: all 0.3s ease;
+}
+
+.stats-card-wrapper:hover {
+    transform: translateY(-5px);
+}
+
+.stats-card-wrapper .card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #ffffff, #f5f5f5);
+}
+
+.stats-card-wrapper:hover .card {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.stats-card-wrapper .card-body {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.stats-card-wrapper i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stats-card-wrapper:hover i {
+    transform: scale(1.1);
+}
+
+.stats-card-wrapper .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card-wrapper h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+/* Specific colors for each card */
+.stats-card-wrapper:nth-child(1) .card {
+    border-color: var(--primary-color);
+}
+
+.stats-card-wrapper:nth-child(2) .card {
+    border-color: var(--success-color);
+}
+
+.stats-card-wrapper:nth-child(3) .card {
+    border-color: var(--info-color);
+}
+
+.stats-card-wrapper:nth-child(4) .card {
+    border-color: var(--warning-color);
+}
+
+.stats-card-wrapper:hover:nth-child(1) .card {
+    box-shadow: 0 6px 12px rgba(44, 62, 80, 0.2);
+}
+
+.stats-card-wrapper:hover:nth-child(2) .card {
+    box-shadow: 0 6px 12px rgba(46, 204, 113, 0.2);
+}
+
+.stats-card-wrapper:hover:nth-child(3) .card {
+    box-shadow: 0 6px 12px rgba(26, 188, 156, 0.2);
+}
+
+.stats-card-wrapper:hover:nth-child(4) .card {
+    box-shadow: 0 6px 12px rgba(241, 196, 15, 0.2);
+}
+</style>
 
 <script>
 // Initialize charts
