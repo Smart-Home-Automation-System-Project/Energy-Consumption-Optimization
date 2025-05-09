@@ -20,10 +20,13 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Device Details</h5>
+                <button class="btn btn-light" id="toggle-devices-btn" onclick="toggleDevicesSection()">
+                    <i class="fas fa-chevron-down me-2"></i>View Devices
+                </button>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="devices-section" style="display: none;">
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="input-group">
@@ -217,21 +220,29 @@ function renderDeviceCards(data) {
 
     uniqueDevices.forEach(device => {
         const deviceInfo = data.find(d => d.device_name === device);
+        const isSelected = selectedDevice === device;
         const card = document.createElement('div');
         card.className = 'col-md-6 mb-3';
         card.innerHTML = `
-            <div class="card h-100 ${selectedDevice === device ? 'border-primary' : ''}" 
-                 data-device="${device}" style="cursor: pointer;">
-                <div class="card-body">
-                    <h5 class="card-title">${device}</h5>
-                    <p class="card-text">
-                        <span class="badge bg-info mb-2">${deviceInfo.location}</span>
-                        <span class="badge bg-secondary mb-2">${deviceInfo.device_type}</span>
-                        <div class="mt-2">
-                            <small class="text-muted">Max Power Rating:</small><br>
+            <div class="device-card ${isSelected ? 'selected' : ''}" 
+                 data-device="${device}">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">${device}</h5>
+                                <div class="mb-2">
+                                    <span class="badge bg-info">${deviceInfo.location}</span>
+                                    <span class="badge bg-secondary">${deviceInfo.device_type}</span>
+                                </div>
+                            </div>
+                            ${isSelected ? '<i class="fas fa-check-circle text-success selected-icon"></i>' : ''}
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted d-block">Max Power Rating:</small>
                             <strong>${deviceInfo.max_power_rating}W</strong>
                         </div>
-                    </p>
+                    </div>
                 </div>
             </div>
         `;
@@ -239,37 +250,23 @@ function renderDeviceCards(data) {
     });
     
     // Add event listeners to cards after they are rendered
-    document.querySelectorAll('#device-cards .card').forEach(cardElement => {
+    document.querySelectorAll('.device-card').forEach(cardElement => {
         cardElement.addEventListener('click', function(event) {
             const deviceName = this.getAttribute('data-device');
             selectDevice(deviceName);
         });
     });
-    
-    // If a device was previously selected, make sure it's still selected
-    if (selectedDevice) {
-        const deviceExists = uniqueDevices.includes(selectedDevice);
-        if (deviceExists) {
-            selectDevice(selectedDevice);
-        } else {
-            // If the device no longer exists in the filtered list, clear the selection
-            selectedDevice = null;
-            document.getElementById('device-chart-container').classList.add('d-none');
-            document.getElementById('no-device-selected').classList.remove('d-none');
-        }
-    }
 }
 
 function selectDevice(device) {
     selectedDevice = device;
     
     // Update card selection
-    const cards = document.querySelectorAll('#device-cards .card');
-    cards.forEach(card => {
+    document.querySelectorAll('.device-card').forEach(card => {
         if (card.getAttribute('data-device') === device) {
-            card.classList.add('border-primary');
+            card.classList.add('selected');
         } else {
-            card.classList.remove('border-primary');
+            card.classList.remove('selected');
         }
     });
     
@@ -282,6 +279,22 @@ function selectDevice(device) {
     
     // Update the chart
     updateDeviceHistoricalChart();
+}
+
+function toggleDevicesSection() {
+    const devicesSection = document.getElementById('devices-section');
+    const toggleBtn = document.getElementById('toggle-devices-btn');
+    const icon = toggleBtn.querySelector('i');
+    
+    if (devicesSection.style.display === 'none') {
+        devicesSection.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-up me-2"></i>Hide Devices';
+        // Load devices when section is shown
+        loadDeviceCards();
+    } else {
+        devicesSection.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-down me-2"></i>View Devices';
+    }
 }
 
 // Initialize charts and device cards on page load
@@ -322,6 +335,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 
 <style>
+#toggle-devices-btn {
+    transition: all 0.3s ease;
+}
+
+#toggle-devices-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#devices-section {
+    transition: all 0.3s ease;
+}
+
 .card {
     transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -364,5 +390,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     justify-content: center;
     background-color: #f8f9fa;
     border-radius: 0.25rem;
+}
+
+.device-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.device-card .card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.device-card:hover .card {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.device-card.selected .card {
+    border-color: var(--success-color);
+    background-color: rgba(46, 204, 113, 0.05);
+}
+
+.device-card.selected:hover .card {
+    box-shadow: 0 6px 12px rgba(46, 204, 113, 0.2);
+}
+
+.selected-icon {
+    font-size: 1.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.device-card .card-body {
+    position: relative;
+}
+
+.device-card .card-body strong {
+    color: var(--accent-color);
+    font-size: 1.1rem;
 }
 </style>

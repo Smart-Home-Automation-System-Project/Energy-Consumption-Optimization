@@ -1,6 +1,6 @@
 import sqlite3
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import os
 
@@ -117,11 +117,50 @@ def generate_power(device_type, max_power, switch_id, timestamp):
         
     return power
 
+def transfer_to_historical():
+    """
+    Transfer the last 24 hours of real-time energy readings to the historical table.
+    """
+    try:
+        # Calculate the timestamp for 24 hours ago
+        cutoff_time = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Insert data from real_time_energy_readings into historical_energy_readings
+        cursor.execute("""
+            INSERT OR IGNORE INTO historical_energy_readings (switch_id, timestamp, power_consumption)
+            SELECT switch_id, timestamp, power_consumption
+            FROM real_time_energy_readings
+            WHERE timestamp <= ?
+        """, (cutoff_time,))
+        
+        # Delete transferred data from real_time_energy_readings
+        cursor.execute("""
+            DELETE FROM real_time_energy_readings
+            WHERE timestamp <= ?
+        """, (cutoff_time,))
+        
+        # Commit the transaction
+        conn.commit()
+        print(f"✅ Successfully transferred data older than {cutoff_time} to historical_energy_readings")
+        
+    except Exception as e:
+        print(f"Error during data transfer: {e}")
+        conn.rollback()
+
 # Main loop to continuously insert real-time data
 try:
+    last_transfer_date = None
     while True:
         # Get current timestamp
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        current_time = datetime.now()
+        timestamp = current_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Check if we need to transfer data (at midnight)
+        current_date = current_time.date()
+        if last_transfer_date != current_date and current_time.hour == 0 and current_time.minute == 0:
+            print(f"Initiating daily data transfer at {timestamp}")
+            transfer_to_historical()
+            last_transfer_date = current_date
         
         # Generate and insert data for each device
         for switch_id, name, location, device_type, max_power in devices:
