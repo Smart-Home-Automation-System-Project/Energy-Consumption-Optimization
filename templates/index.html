@@ -5,19 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Consumption Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --info-color: #1abc9c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #2c3e50;
+            --text-light: #ecf0f1;
+            --text-dark: #2c3e50;
+        }
+
+        body {
+            background-color: #f5f6fa;
+            color: var(--text-dark);
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .bg-success {
+            background-color: var(--success-color) !important;
+        }
+
+        .bg-warning {
+            background-color: var(--warning-color) !important;
+        }
+
+        .bg-danger {
+            background-color: var(--danger-color) !important;
+        }
+
+        .bg-info {
+            background-color: var(--info-color) !important;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .text-success {
+            color: var(--success-color) !important;
+        }
+
+        .text-warning {
+            color: var(--warning-color) !important;
+        }
+
+        .text-danger {
+            color: var(--danger-color) !important;
+        }
+
+        .text-info {
+            color: var(--info-color) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .table {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: var(--light-bg);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .badge {
+            padding: 0.5em 1em;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .stats-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stats-card i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .stats-card h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card p {
+            color: #666;
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <div class="container-fluid pb-4">
         {% include 'components/header.html' %}
 
         <!-- Real-Time Analytics Section -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-dark text-white">
-                        <h5>Real-Time Energy Analytics</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Real-Time Energy Analytics</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/real_time_analytics.html' %}
@@ -31,7 +175,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-danger text-white">
-                        <h5>Recent Anomalies (Past Hour)</h5>
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Recent Anomalies (Past Hour)</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/recent_anomalies.html' %}
@@ -44,7 +188,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5>Today's Energy Consumption Forecast</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Today's Energy Consumption Forecast</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/prediction_chart.html' %}
@@ -57,7 +201,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-info text-white">
-                        <h5>7-Day Energy Consumption Forecast</h5>
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>7-Day Energy Consumption Forecast</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/seven_day_forecast.html' %}
@@ -70,7 +214,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-warning text-white">
-                        <h5>Historical Energy Consumption</h5>
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historical Energy Consumption</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/historical_consumption.html' %}
@@ -83,7 +227,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5>Scheduled Devices</h5>
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Scheduled Devices</h5>
                     </div>
                     <div class="card-body">
                         {% include 'components/scheduled_tasks.html' %}
