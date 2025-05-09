@@ -1,6 +1,6 @@
 import sqlite3
-
-DB_PATH = "database.db"  # Update path if needed
+import os
+DB_PATH = os.path.join(os.path.dirname(__file__), "database.db")
 
 def delete_from_devices():
     with sqlite3.connect(DB_PATH) as conn:
