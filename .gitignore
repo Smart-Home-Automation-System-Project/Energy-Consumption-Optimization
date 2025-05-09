@@ -3,7 +3,6 @@ predict_man_explicit.py
 
 # Directories
 /predictor/
-.env
 
 
 # Database files
@@ -15,3 +14,4 @@ predict_man_explicit.py
 # docker files
 docker-compose.yml
 Dockerfile
+.env
