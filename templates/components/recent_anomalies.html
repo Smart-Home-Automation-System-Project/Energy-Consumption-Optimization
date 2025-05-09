@@ -1,0 +1,64 @@
+<div class="recent-anomalies">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Location</th>
+                    <th>Last Anomaly</th>
+                    <th>Power (W)</th>
+                    <th>Max Rating (W)</th>
+                    <th>Excess (W)</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody id="anomalies-table-body">
+                <!-- Data will be populated via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function updateAnomalies() {
+    fetch('/api/anomalies/recent')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('anomalies-table-body');
+            tableBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">No anomalies detected in the past hour</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            data.forEach(anomaly => {
+                const row = document.createElement('tr');
+                row.className = 'table-warning';
+                
+                const timestamp = new Date(anomaly.timestamp);
+                const timeAgo = Math.round((new Date() - timestamp) / 1000 / 60); // minutes ago
+                
+                row.innerHTML = `
+                    <td>${anomaly.device_name}</td>
+                    <td>${anomaly.location}</td>
+                    <td>${timeAgo} minutes ago</td>
+                    <td>${anomaly.power_consumption}</td>
+                    <td>${anomaly.max_power_rating}</td>
+                    <td class="text-danger">+${anomaly.excess}</td>
+                    <td><span class="badge bg-warning">${anomaly.anomaly_count}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching anomalies:', error));
+}
+
+// Update anomalies every 30 seconds
+updateAnomalies();
+setInterval(updateAnomalies, 30000);
+</script> 

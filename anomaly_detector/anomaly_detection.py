@@ -3,9 +3,9 @@ from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.datastream.functions import MapFunction, FlatMapFunction
 import os
 import json
-import csv
 import sqlite3
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -56,25 +56,45 @@ class AnomalyDetector(FlatMapFunction):
         return result
 
 
-class CSVToEnergyReading(MapFunction):
+class DatabaseEnergyReading(MapFunction):
     def map(self, value):
-        csv_line = value
-        parts = csv_line.split(',')
-        if len(parts) >= 3 and parts[0] != 'switch_id':
-            return EnergyReading(parts[0], parts[1], parts[2])
+        row = value
+        if len(row) >= 3:
+            return EnergyReading(row[0], row[1], row[2])
         return None
 
 
 def load_devices():
     devices = {}
-    with open(os.path.join(ROOT_PATH, "devices.csv"), 'r') as file:
-        reader = csv.reader(file)
-        next(reader)  # Skip header
-        for row in reader:
-            if len(row) >= 5:
-                device = DeviceInfo(row[0], row[1], row[2], row[3], row[4])
-                devices[row[0]] = device
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT switch_id, name, location, device_type, max_power_rating FROM devices")
+        rows = cursor.fetchall()
+        for row in rows:
+            device = DeviceInfo(row[0], row[1], row[2], row[3], row[4])
+            devices[row[0]] = device
+        conn.close()
+    except Exception as e:
+        print(f"Error loading devices from database: {e}")
     return devices
+
+
+def get_realtime_readings():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT switch_id, timestamp, power_consumption 
+            FROM real_time_energy_readings 
+            ORDER BY timestamp DESC
+        """)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"Error reading real-time data from database: {e}")
+        return []
+    finally:
+        conn.close()
 
 
 def store_anomaly(anomaly):
@@ -111,15 +131,15 @@ def main():
     devices_dict = load_devices()
     print(f"Loaded {len(devices_dict)} devices for anomaly detection")
 
-    # Create a source from the CSV file
-    input_path = os.path.join(ROOT_PATH, "realtime_simulated.csv")
+    # Get real-time readings from database
+    readings_data = get_realtime_readings()
+    
+    # Create a data stream from the database readings
+    data_stream = env.from_collection(readings_data)
 
-    # Read the CSV file
-    data_stream = env.read_text_file(input_path)
-
-    # Transform CSV lines to EnergyReading objects and filter out header/invalid lines
+    # Transform database rows to EnergyReading objects and filter out invalid rows
     readings = data_stream \
-        .map(CSVToEnergyReading()) \
+        .map(DatabaseEnergyReading()) \
         .filter(lambda x: x is not None)
 
     # Detect anomalies where power consumption exceeds max rating
