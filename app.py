@@ -5,7 +5,7 @@ from routes.historical import historical_bp
 from routes.devices import devices_bp
 from routes.analytics import analytics_bp
 from dotenv import load_dotenv
-
+from routes.anomalies import anomalies_bp
 # Load environment variables
 load_dotenv()
 ROOT_PATH = os.getenv("ROOT_PATH")
@@ -24,7 +24,7 @@ app.register_blueprint(scheduling.bp)
 app.register_blueprint(historical_bp)
 app.register_blueprint(devices_bp)
 app.register_blueprint(analytics_bp)
-
+app.register_blueprint(anomalies_bp)
 @app.route('/')
 def index():
     return render_template('index.html')
