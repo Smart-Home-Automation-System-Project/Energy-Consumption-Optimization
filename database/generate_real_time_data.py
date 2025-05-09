@@ -141,7 +141,7 @@ def transfer_to_historical():
         
         # Commit the transaction
         conn.commit()
-        print(f"✅ Successfully transferred data older than {cutoff_time} to historical_energy_readings")
+        print(f" Successfully transferred data older than {cutoff_time} to historical_energy_readings")
         
     except Exception as e:
         print(f"Error during data transfer: {e}")
