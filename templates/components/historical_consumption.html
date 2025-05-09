@@ -20,10 +20,13 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Device Details</h5>
+                <button class="btn btn-light" id="toggle-devices-btn" onclick="toggleDevicesSection()">
+                    <i class="fas fa-chevron-down me-2"></i>View Devices
+                </button>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="devices-section" style="display: none;">
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="input-group">
@@ -284,6 +287,22 @@ function selectDevice(device) {
     updateDeviceHistoricalChart();
 }
 
+function toggleDevicesSection() {
+    const devicesSection = document.getElementById('devices-section');
+    const toggleBtn = document.getElementById('toggle-devices-btn');
+    const icon = toggleBtn.querySelector('i');
+    
+    if (devicesSection.style.display === 'none') {
+        devicesSection.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-up me-2"></i>Hide Devices';
+        // Load devices when section is shown
+        loadDeviceCards();
+    } else {
+        devicesSection.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-down me-2"></i>View Devices';
+    }
+}
+
 // Initialize charts and device cards on page load
 document.addEventListener('DOMContentLoaded', async () => {
     // Set default dates (last 30 days)
@@ -322,6 +341,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 
 <style>
+#toggle-devices-btn {
+    transition: all 0.3s ease;
+}
+
+#toggle-devices-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#devices-section {
+    transition: all 0.3s ease;
+}
+
 .card {
     transition: transform 0.2s, box-shadow 0.2s;
 }
